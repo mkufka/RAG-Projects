@@ -1,0 +1,95 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build RetrievalAugmentedGeneration",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"-c",
+				"Debug",
+				".NET/RetrievalAugmentedGeneration/RetrievalAugmentedGeneration.csproj"
+			],
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": "build"
+		},
+		{
+			"label": "build RetrievalAugmentedGeneration",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"-c",
+				"Debug",
+				".NET/RetrievalAugmentedGeneration/RetrievalAugmentedGeneration.csproj"
+			],
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": "build"
+		},
+		{
+			"label": "build RetrievalAugmentedGeneration",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"-c",
+				"Debug",
+				".NET/RetrievalAugmentedGeneration/RetrievalAugmentedGeneration.csproj"
+			],
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": "build"
+		},
+		{
+			"label": "build RetrievalAugmentedGeneration",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"-c",
+				"Debug",
+				".NET/RetrievalAugmentedGeneration/RetrievalAugmentedGeneration.csproj"
+			],
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": "build"
+		},
+		{
+			"label": "build RetrievalAugmentedGeneration",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"-c",
+				"Debug",
+				".NET/RetrievalAugmentedGeneration/RetrievalAugmentedGeneration.csproj"
+			],
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": "build"
+		},
+		{
+			"label": "build RetrievalAugmentedGeneration",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"-c",
+				"Debug",
+				".NET/RetrievalAugmentedGeneration/RetrievalAugmentedGeneration.csproj"
+			],
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": "build"
+		}
+	]
+}

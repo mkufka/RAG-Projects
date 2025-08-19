@@ -1,0 +1,8 @@
+{
+  // Ensure the C# Dev Kit opens the correct solution in the Solution Explorer
+  "dotnet.defaultSolution": ".NET/RetrievalAugmentedGeneration.sln",
+  "python.defaultInterpreterPath": ".venv\\Scripts\\python.exe",
+  "python.analysis.extraPaths": [
+    ".venv\\Lib\\site-packages"
+  ]
+}
