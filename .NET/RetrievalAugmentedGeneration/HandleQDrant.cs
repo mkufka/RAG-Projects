@@ -17,7 +17,7 @@ public class HandleQDrant
         var client = new QdrantClient(pathToQdrant, portToQdrant);
 
         await client.GetCollectionInfoAsync(memoryCollectionName)
-            .ContinueWith(t => 
+            .ContinueWith(t =>
             {
                 if (t.IsFaulted || t.Result == null)
                 {
@@ -54,9 +54,11 @@ public class HandleQDrant
                 string documentId = Path.GetFileNameWithoutExtension(pdfFile);
 
                 const int maxChunkSize = 1000;
+                const int overlapChars = 200; // z.B. 200 Zeichen Überlappung
 
                 int chunkIndex = 0;
-                foreach (var chunk in ChunkTextByWords(pdfContent, maxChunkSize))
+                //foreach (var chunk in ChunkTextByWords(pdfContent, maxChunkSize))
+                foreach (var chunk in ChunkTextByWordsWithOverlap(pdfContent, maxChunkSize, overlapChars))
                 {
                     OpenAIEmbedding embedding = embeddingClient.GenerateEmbedding(input: chunk);
                     ReadOnlyMemory<float> vector = embedding.ToFloats();
@@ -83,7 +85,7 @@ public class HandleQDrant
 
                     chunkIndex++;
                 }
-                
+
                 Console.WriteLine($"Imported PDF: {documentId}");
             }
         }
@@ -109,8 +111,8 @@ public class HandleQDrant
         }
     }
 
-    // Teilt Text in Chunks, die maxChunkSize nicht �berschreiten.
-    // Bevorzugt Trennung an Wortgrenzen; bricht extrem lange "W�rter" hart.
+    // Teilt Text in Chunks, die maxChunkSize nicht �berschreiten.
+    // Bevorzugt Trennung an Wortgrenzen; bricht extrem lange "W�rter" hart.
     private static IEnumerable<string> ChunkTextByWords(string text, int maxChunkSize)
     {
         if (string.IsNullOrWhiteSpace(text))
@@ -134,7 +136,7 @@ public class HandleQDrant
                 extra = 0;
             }
 
-            // Falls ein einzelnes "Wort" gr��er als maxChunkSize ist -> hart splitten
+            // Falls ein einzelnes "Wort" größer als maxChunkSize ist -> hart splitten
             if (word.Length > maxChunkSize)
             {
                 int idx = 0;
@@ -176,4 +178,63 @@ public class HandleQDrant
             yield return sb.ToString();
     }
 
+    private static IEnumerable<string> ChunkTextByWordsWithOverlap(string text, int maxChunkSize, int overlapChars)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            yield break;
+
+        if (overlapChars < 0 || overlapChars >= maxChunkSize)
+            throw new ArgumentOutOfRangeException(nameof(overlapChars), "overlapChars muss >= 0 und < maxChunkSize sein.");
+
+        // Whitespace normalisieren (inkl. \r, \n, \t)
+        string s = Regex.Replace(text, @"\s+", " ").Trim();
+        if (s.Length == 0)
+            yield break;
+
+        int start = 0;
+        while (start < s.Length)
+        {
+            int maxEnd = Math.Min(start + maxChunkSize, s.Length);
+
+            // Bevorzugt an der letzten Leerstelle trennen
+            int split = maxEnd;
+            if (maxEnd < s.Length)
+            {
+                int lastSpace = s.LastIndexOf(' ', maxEnd - 1, maxEnd - start);
+                if (lastSpace > start + 1) // vermeidet zu kurze Chunks
+                    split = lastSpace;
+            }
+
+            if (split <= start)
+                split = Math.Min(start + maxChunkSize, s.Length); // hart schneiden (langes "Wort")
+
+            string chunk = s.Substring(start, split - start).Trim();
+            if (chunk.Length > 0)
+                yield return chunk;
+
+            if (split >= s.Length)
+                yield break;
+
+            // Nächster Start: mindestens overlapChars zurückspringen
+            int nextStart = Math.Max(0, split - overlapChars);
+
+            // Optional: an Wortgrenze ausrichten (links zur vorherigen Leerstelle, um mitten im Wort zu vermeiden)
+            if (nextStart > 0)
+            {
+                int prevSpace = s.LastIndexOf(' ', nextStart);
+                if (prevSpace >= 0 && prevSpace >= start) // nicht vor aktuellen Chunk-Anfang zurückfallen
+                    nextStart = prevSpace + 1;            // nach dem Space beginnen
+            }
+
+            // Fortschritt sicherstellen
+            if (nextStart <= start)
+                nextStart = split; // zur Not direkt hinter dem letzten Chunk starten
+
+            // Führende Spaces überspringen
+            while (nextStart < s.Length && s[nextStart] == ' ')
+                nextStart++;
+
+            start = nextStart;
+        }
+    }
 }
