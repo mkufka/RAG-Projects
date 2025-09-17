@@ -1,0 +1,30 @@
+# Build results
+bin/
+obj/
+debug/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+
+# Rider project files
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# NuGet packages
+*.nupkg
+*.snupkg
+packages/
+
+# Logs
+*.log
+
+# User-specific files
+*.sln.docstates
+
+# Others
+TestResults/.
