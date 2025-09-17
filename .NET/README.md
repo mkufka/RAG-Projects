@@ -20,15 +20,33 @@ Installiere die folgenden NuGet-Packages im Projektverzeichnis:
 
    Stelle sicher, dass alle oben genannten Pakete installiert sind. Baue das Projekt, um Abhängigkeitsprobleme auszuschließen.
 
-3. **Projektstruktur**
+3. **Konfigurationsdaten anpassen**
+
+   In der Datei `Program.cs` müssen einige Konfigurationsparameter an Deine Umgebung angepasst werden:
+   ```csharp
+   const string memoryCollectionName = "CollectionWithData"; // Name der Collection in Qdrant
+   const string pathToQdrant = "pathToQdrantDataBase";      // Pfad oder Adresse zur Qdrant-Datenbank
+   const int portToQdrant = 6334;                           // Port der Qdrant-Datenbank
+   const string textEmbeddingModel = "text-embedding-3-large"; // OpenAI-Model für Embeddings
+   const string chatModel = "gpt-4o-mini";                  // OpenAI-Chatmodell für Antworten
+   const string apiKey = "your_openai_api_key";             // Dein OpenAI API-Key
+   ```
+   **Beschreibung der Konfigurationsdaten:**
+   - `memoryCollectionName`: Name der Datensammlung in Qdrant für Vektordaten.
+   - `pathToQdrant` und `portToQdrant`: Verbindungseinstellungen zur lokalen oder entfernten Qdrant-Datenbank.
+   - `textEmbeddingModel`: OpenAI-Modell, das für die Erzeugung von Text-Embeddings verwendet wird.
+   - `chatModel`: OpenAI-Chatmodell, das für die Generierung von Antworten genutzt wird.
+   - `apiKey`: Dein persönlicher API-Schlüssel von OpenAI.
+
+4. **Projektstruktur**
 
    Der relevante Quellcode befindet sich im Ordner `.NET/RetrievalAugmentedGeneration`.
 
-4. **Eigene Anpassungen**
+5. **Eigene Anpassungen**
 
    Passe die Implementierung nach Bedarf an, um eigene Dokumente oder Datenquellen einzubinden.
 
-5. **Ausführen**
+6. **Ausführen**
 
    Starte das Projekt aus der IDE oder per Kommandozeile, um die RAG-Funktionalität zu nutzen.
 
