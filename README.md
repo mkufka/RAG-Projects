@@ -1,0 +1,13 @@
+# RAG Implementierungen
+
+In diesem Repository befinden sich zwei unterschiedliche Implementierungen des Retrieval-Augmented Generation (RAG) Konzepts:
+
+- **.NET Ordner**: Enthält eine C# Implementierung von RAG.  
+  Für Details zur Nutzung, Installation und Funktionsweise siehe die README-Datei im `.NET`-Ordner.
+
+- **python Ordner**: Enthält eine Python Implementierung von RAG.  
+  Für Details zur Nutzung, Installation und Funktionsweise siehe die README-Datei im `python`-Ordner.
+
+Jede Implementierung ist eigenständig und besitzt eine eigene README Datei mit spezifischen Informationen.
+
+---
