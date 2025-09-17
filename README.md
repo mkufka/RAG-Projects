@@ -1,6 +1,6 @@
 # RAG Implementierungen
 
-In diesem Repository befinden sich zwei unterschiedliche Implementierungen des Retrieval-Augmented Generation (RAG) Konzepts:
+In diesem Repository befinden sich zwei unterschiedliche Implementierungen des Retrieval-Augmented Generation (RAG) Konzepts mit PDF-Dateien:
 
 - **.NET Ordner**: Enthält eine C# Implementierung von RAG.  
   Für Details zur Nutzung, Installation und Funktionsweise siehe die README-Datei im `.NET`-Ordner.
@@ -10,4 +10,5 @@ In diesem Repository befinden sich zwei unterschiedliche Implementierungen des R
 
 Jede Implementierung ist eigenständig und besitzt eine eigene README Datei mit spezifischen Informationen.
 
+*Bitte beachten: Die Implementierungen funktionieren ausschließlich mit PDF-Dateien!*
 ---
