@@ -71,31 +71,6 @@ def embed_query(client: OpenAI, model: str, text: str, dim: int) -> List[float]:
         print(f"Warnung: Query-Embedding-Dim {len(vec)} != erwarteten {dim}", file=sys.stderr)
     return l2_normalize(vec)
 
-# def search_qdrant(qc: QdrantClient, s: Settings, query_vec: List[float]) -> List[ScoredPoint]:
-#     """
-#     Nutzt bevorzugt die neue Qdrant-API query_points(...).
-#     Fällt bei älteren qdrant-client-Versionen auf search(...) zurück.
-#     """
-#     try:
-#         # Korrekt: query ist direkt der dichte Vektor (List[float])
-#         resp = qc.query_points(
-#             collection_name=s.collection,
-#             query=query_vec,                 # <-- statt {"vector": query_vec}
-#             limit=s.top_k,
-#             with_payload=True,
-#             score_threshold=s.score_threshold,
-#         )
-#         hits = resp.points  # List[ScoredPoint]
-#     except AttributeError:
-#         # Fallback auf alte API
-#         hits = qc.search(
-#             collection_name=s.collection,
-#             query_vector=query_vec,
-#             limit=s.top_k,
-#             with_payload=True,
-#             score_threshold=s.score_threshold,
-#         )
-#     return hits
 
 def search_qdrant(qc: QdrantClient, s: Settings, query_vec: List[float]) -> List[ScoredPoint]:
     """
@@ -175,24 +150,6 @@ def build_context(hits: List[ScoredPoint], max_tokens: int) -> Tuple[str, List[S
         used_tokens += t
     return context, used_hits
 
-# def chat_once(client: OpenAI, s: Settings, context: str, user_query: str) -> str:
-#     system_prompt = build_system_prompt()
-#     messages = [
-#         {"role": "system", "content": system_prompt},
-#         {"role": "user", "content":
-#             "Kontext:\n" + context + "\n\n"
-#             "Aufgabe: Beantworte die folgende Frage ausschließlich anhand des obigen Kontexts. "
-#             "Wenn der Kontext nicht reicht, sag ehrlich, dass du keine Information im Material findest.\n\n"
-#             f"Frage: {user_query}"
-#         },
-#     ]
-#     resp = client.chat.completions.create(
-#         model=s.chat_model,
-#         messages=messages,
-#         temperature=0.2,
-#         max_tokens=s.max_answer_tokens,
-#     )
-#     return resp.choices[0].message.content.strip()
 
 def chat_once(client: OpenAI, s: Settings, context: str, user_query: str) -> str:
     system_prompt = build_system_prompt()
