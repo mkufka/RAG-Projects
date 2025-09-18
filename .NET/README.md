@@ -1,8 +1,10 @@
 ## Verwendung der C#-Implementierung (Retrieval Augmented Generation)
 
-Dieses Verzeichnis enthält eine Beispielimplementierung für Retrieval Augmented Generation (RAG) in C#.
+Dieses Verzeichnis enthält eine Beispielimplementierung für Retrieval Augmented Generation (RAG) in C# mit einer Qdrant-Vektor-Datenbank.
 
 ### Voraussetzungen & Installation
+
+Zum Ausführen des Codes wird eine Qdrant-Vektor-Datenbank benötigt.
 
 Installiere die folgenden NuGet-Packages im Projektverzeichnis:
 
