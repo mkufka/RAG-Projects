@@ -1,3 +1,6 @@
+
+<img width="384" height="256" alt="RAG" src="https://github.com/user-attachments/assets/ec5032ea-7a14-4ae4-bd80-73b44403b102" />
+
 # RAG Implementierungen mit Qdrant
 
 In diesem Repository befinden sich zwei unterschiedliche Implementierungen des Retrieval-Augmented Generation (RAG) Konzepts mit PDF-Dateien:
