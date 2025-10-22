@@ -1,4 +1,4 @@
-﻿using RetrievalAugmentedGeneration;
+using RetrievalAugmentedGeneration;
 using OpenAI.Chat;
 using OpenAI.Embeddings;
 using Qdrant.Client;
@@ -60,7 +60,7 @@ static async Task StartRagChatAsync()
     {
         new SystemChatMessage(
             "Du bist ein hilfreicher Assistent. Beantworte Fragen ausschließlich auf Basis der bereitgestellten Kontextausschnitte. " +
-            "Wenn die Information nicht im Kontext steht, sage ehrlich, dass sie nicht vorhanden ist. Antworte kurz und präzise auf Deutsch.")
+            "Wenn die Information nicht im Kontext steht, sage ehrlich, dass sie nicht vorhanden ist. Antworte kurz und präzise auf Deutsch. Damit Du auch Fragen zu Datums-Werten beantworten kannst, heute ist der " + DateTime.Now.ToString())
     };
 
     Console.WriteLine("Frage den Assistenten zu den PDF-Inhalten in Qdrant. Tippe 'exit' zum Beenden.\n");
