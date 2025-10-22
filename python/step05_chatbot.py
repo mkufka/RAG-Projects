@@ -1,6 +1,7 @@
 # step05_chatbot.py
 from __future__ import annotations
 import sys
+from datetime import datetime
 import numpy as np
 import tiktoken
 from typing import List, Tuple
@@ -35,6 +36,7 @@ def build_system_prompt() -> str:
         "Du DARFST NUR Informationen verwenden, die im Abschnitt 'Kontext' bereitgestellt werden. "
         "Wenn der Kontext nicht ausreicht, sage klar: 'Dazu habe ich im bereitgestellten Material nichts gefunden.' "
         "Antworte auf Deutsch, kurz und präzise, benutze ausschließlich das generische Maskulinum."
+        "Damit Du auch Fragen zu Datums-Werten beantworten kannst, heute ist der " + datetime.now().strftime("%d.%m.%Y") + "."
     )
 
 def format_hit(h: ScoredPoint) -> str:
