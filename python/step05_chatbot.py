@@ -1,5 +1,9 @@
 # step05_chatbot.py
 from __future__ import annotations
+
+# Nutze Windows-Zertifikatspeicher für SSL (Firmen-Proxy-Unterstützung)
+import truststore
+truststore.inject_into_ssl()
 import sys
 from datetime import datetime
 import numpy as np
@@ -32,10 +36,9 @@ def trim_to_tokens(texts: List[str], max_tokens: int) -> Tuple[str, int]:
 
 def build_system_prompt() -> str:
     return (
-        "Du bist ein hilfreicher Assistent für Retrieval-Augmented Generation (RAG). "
-        "Du DARFST NUR Informationen verwenden, die im Abschnitt 'Kontext' bereitgestellt werden. "
-        "Wenn der Kontext nicht ausreicht, sage klar: 'Dazu habe ich im bereitgestellten Material nichts gefunden.' "
-        "Antworte auf Deutsch, kurz und präzise, benutze ausschließlich das generische Maskulinum."
+        "Du bist ein hilfreicher Assistent. Beantworte Fragen ausschließlich auf Basis der bereitgestellten Kontextausschnitte. "
+        "Wenn die Information nicht im Kontext steht, sage ehrlich, dass sie nicht vorhanden ist. "
+        "Antworte kurz und präzise auf Deutsch. "
         "Damit Du auch Fragen zu Datums-Werten beantworten kannst, heute ist der " + datetime.now().strftime("%d.%m.%Y") + "."
     )
 
@@ -158,10 +161,9 @@ def chat_once(client: OpenAI, s: Settings, context: str, user_query: str) -> str
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content":
-            "Kontext:\n" + context + "\n\n"
-            "Aufgabe: Beantworte die folgende Frage ausschließlich anhand des obigen Kontexts. "
-            "Wenn der Kontext nicht reicht, sag ehrlich, dass du keine Information im Material findest.\n\n"
-            f"Frage: {user_query}"
+            f"Frage: {user_query}\n\n"
+            "Hier sind relevante Auszüge aus den Dokumenten. Nutze sie bei der Beantwortung:\n"
+            + context
         },
     ]
 

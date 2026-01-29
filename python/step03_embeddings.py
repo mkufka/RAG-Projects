@@ -1,5 +1,9 @@
 # step03_embeddings.py
 from __future__ import annotations
+
+# Nutze Windows-Zertifikatspeicher für SSL (Firmen-Proxy-Unterstützung)
+import truststore
+truststore.inject_into_ssl()
 import time
 from typing import List, Dict, Any, Iterable
 import numpy as np

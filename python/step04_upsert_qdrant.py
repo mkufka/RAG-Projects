@@ -1,5 +1,9 @@
 # step04_upsert_qdrant.py
 from __future__ import annotations
+
+# Nutze Windows-Zertifikatspeicher für SSL (Firmen-Proxy-Unterstützung)
+import truststore
+truststore.inject_into_ssl()
 import uuid
 from typing import List, Dict, Any, Iterable
 
