@@ -17,7 +17,7 @@ Für beide Implementierungen ist eine Qdrant-Vektor-Datenbank vorgesehen.
 
 ## Voraussetzungen
 
-- **.NET:** SDK mit Unterstützung für das Ziel `net9.0` und eine .NET-9-Runtime.
+- **.NET:** .NET-10-SDK und .NET-10-Runtime (Ziel `net10.0`).
 - **Python:** Python 3.12 oder neuer; die bestehende Umgebung wurde mit Python 3.14.2 geprüft.
 - **Qdrant:** erreichbarer Server; aktuell wird Version **1.20.2** verwendet.
 - **OpenAI:** gültiger API-Key mit API-Guthaben und Zugriff auf die konfigurierten Modelle.

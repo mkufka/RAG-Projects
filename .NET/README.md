@@ -6,7 +6,7 @@ Dieses Verzeichnis enthält eine Beispielimplementierung für Retrieval Augmente
 
 Benötigt werden:
 
-- Ein .NET-SDK mit Unterstützung für `net9.0` sowie eine .NET-9-Runtime.
+- Ein .NET-10-SDK sowie eine .NET-10-Runtime (Ziel `net10.0`).
 - Eine erreichbare Qdrant-Instanz, aktuell Version **1.20.2**, mit gRPC-Port **6334**.
 - Ein OpenAI-API-Key mit API-Guthaben.
 - Ein vorhandenes Verzeichnis mit PDFs mit extrahierbarem Text; OCR ist nicht enthalten.

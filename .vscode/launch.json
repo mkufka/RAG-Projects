@@ -9,7 +9,7 @@
             "type": "coreclr",
             "request": "launch",
             // Build output DLL
-            "program": "${workspaceFolder}/.NET/RetrievalAugmentedGeneration/bin/Debug/net9.0/RetrievalAugmentedGeneration.dll",
+            "program": "${workspaceFolder}/.NET/RetrievalAugmentedGeneration/bin/Debug/net10.0/RetrievalAugmentedGeneration.dll",
             "args": [],
             "cwd": "${workspaceFolder}/.NET/RetrievalAugmentedGeneration",
             "console": "integratedTerminal",
