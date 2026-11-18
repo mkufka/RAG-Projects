@@ -6,12 +6,16 @@ using Qdrant.Client.Grpc;
 using System.Text;
 using QValue = Qdrant.Client.Grpc.Value;
 
-const string memoryCollectionName = "CollectionWithData";
-const string pathToQdrant = "pathToQdrantDataBase";
-const int portToQdrant = 6334;
-const string textEmbeddingModel = "text-embedding-3-large"; // 3072 dims
-const string chatModel = "gpt-4o-mini";
-const string apiKey = "your_openai_api_key";
+DotNetEnv.Env.NoClobber().TraversePath().Load(Path.Combine(AppContext.BaseDirectory, ".env"));
+
+string apiKey = GetRequiredSetting("OPENAI_API_KEY");
+string memoryCollectionName = Environment.GetEnvironmentVariable("RAG_COLLECTION_NAME") ?? "CollectionWithData";
+string pathToQdrant = Environment.GetEnvironmentVariable("QDRANT_HOST") ?? "localhost";
+int portToQdrant = int.Parse(Environment.GetEnvironmentVariable("QDRANT_GRPC_PORT") ?? "6334");
+if (portToQdrant is < 1 or > 65535)
+    throw new InvalidOperationException("QDRANT_GRPC_PORT must be between 1 and 65535.");
+string textEmbeddingModel = Environment.GetEnvironmentVariable("EMBEDDING_MODEL") ?? "text-embedding-3-large";
+string chatModel = Environment.GetEnvironmentVariable("CHAT_MODEL") ?? "gpt-4o-mini";
 
 /* ATTENTION:
 * text-embedding-3-large provides a vector with 3072 dimensions
@@ -19,14 +23,24 @@ const string apiKey = "your_openai_api_key";
 */
 const int vectorSize = 3072;
 
-const string pathToPdfFiles = "full_path_to_directory_with_pdf_files";
+string pathToPdfFiles = GetRequiredSetting("RAG_PDF_DIR");
+if (!Directory.Exists(pathToPdfFiles))
+    throw new DirectoryNotFoundException("RAG_PDF_DIR must point to an existing PDF directory.");
 
 // Entry: first try to load data (ignore if already exists), then start interactive RAG chat.
 await LoadIfNeededSafe();
 await StartRagChatAsync();
 
 // Try to (re)load PDFs into Qdrant, but don't crash if collection already exists.
-static async Task LoadIfNeededSafe()
+static string GetRequiredSetting(string name)
+{
+    string? value = Environment.GetEnvironmentVariable(name);
+    if (string.IsNullOrWhiteSpace(value) || value == "your_openai_api_key")
+        throw new InvalidOperationException($"Set {name} in the repository root .env file or environment.");
+    return value;
+}
+
+async Task LoadIfNeededSafe()
 {
     try
     {
@@ -43,13 +57,8 @@ static async Task LoadIfNeededSafe()
     }
 }
 
-static async Task StartRagChatAsync()
+async Task StartRagChatAsync()
 {
-    if (string.IsNullOrWhiteSpace(apiKey) || apiKey == "your_openai_api_key")
-    {
-        Console.WriteLine("WARNING: No valid OPENAI_API_KEY found. Please set the environment variable.");
-    }
-
     // Clients
     var qdrant = new QdrantClient(pathToQdrant, portToQdrant);
     EmbeddingClient embeddingClient = new(model: textEmbeddingModel, apiKey: apiKey);
