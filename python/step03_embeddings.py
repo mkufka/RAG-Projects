@@ -44,7 +44,7 @@ def embed_chunks(
     - payload: Metadaten (document_id, chunk_index, text, source_path, page_start, page_end)
     """
     s = Settings()
-    client = OpenAI(api_key=s.openai_api_key)
+    client = OpenAI(api_key=s.require_api_key(), base_url=s.openrouter_base_url)
 
     records: List[Dict[str, Any]] = []
     total = len(chunks)
@@ -72,7 +72,7 @@ def embed_chunks(
             vec = emb.embedding
             # Sanity-Checks
             if len(vec) != s.vector_size:
-                print(f"Warnung: Embedding-Dimension {len(vec)} != erwarteten {s.vector_size}")
+                raise ValueError(f"Embedding-Dimension {len(vec)} != erwarteten {s.vector_size}")
 
             rec = {
                 "id": f"{c.document_id}#{c.chunk_index}",

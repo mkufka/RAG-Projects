@@ -10,42 +10,40 @@ namespace RetrievalAugmentedGeneration;
 
 public class HandleQDrant
 {
-    public async Task LoadDataToQdrant(string memoryCollectionName, string pathToPdfFiles, string openAiApiKey, string textEmbeddingModel, string pathToQdrant, int portToQdrant, ulong vectorSize = 3072)
+    public async Task LoadDataToQdrant(string memoryCollectionName, string pathToPdfFiles, string openAiApiKey, string textEmbeddingModel, string pathToQdrant, int portToQdrant, ulong vectorSize = 3072, string baseUrl = "https://openrouter.ai/api/v1")
     {
         // Ensure the collection exists, if not create it.
         // The C# client uses Qdrant's gRPC interface
         var client = new QdrantClient(pathToQdrant, portToQdrant);
 
-        await client.GetCollectionInfoAsync(memoryCollectionName)
-            .ContinueWith(t =>
-            {
-                if (t.IsFaulted || t.Result == null)
-                {
-                    Console.WriteLine($"Collection '{memoryCollectionName}' does not exist. Creating new collection.");
-                }
-                else
-                {
-                    Console.WriteLine($"Collection '{memoryCollectionName}' already exists. Skipping creation.");
-                    return;
-                }
-            });
-
-        await client.CreateCollectionAsync(collectionName: memoryCollectionName, vectorsConfig: new VectorParams
+        if (await client.CollectionExistsAsync(memoryCollectionName))
         {
-            Size = vectorSize,
-            Distance = Distance.Dot
-        });
-
-        EmbeddingClient embeddingClient = new(
-            model: textEmbeddingModel,
-            apiKey: openAiApiKey
-        );
-
+            var info = await client.GetCollectionInfoAsync(memoryCollectionName);
+            if (info.Config.Params.VectorsConfig.Params.Size != vectorSize ||
+                info.Config.Params.VectorsConfig.Params.Distance != Distance.Dot)
+                throw new InvalidOperationException("Collection-Dimension/Distanz passt nicht zum Embedding-Modell.");
+            if (info.PointsCount > 0)
+            {
+                Console.WriteLine($"Collection '{memoryCollectionName}' bereits befüllt. Import übersprungen.");
+                return;
+            }
+        }
+        else
+        {
+            await client.CreateCollectionAsync(memoryCollectionName, new VectorParams
+            {
+                Size = vectorSize,
+                Distance = Distance.Dot
+            });
+        }
+        var provider = new OpenAI.OpenAIClient(new System.ClientModel.ApiKeyCredential(openAiApiKey),
+            new OpenAI.OpenAIClientOptions { Endpoint = new Uri(baseUrl) });
+        EmbeddingClient embeddingClient = provider.GetEmbeddingClient(textEmbeddingModel);
         // Ensure the directory exists
         if (Directory.Exists(pathToPdfFiles))
         {
             // Iterate through all PDF files in the directory
-            foreach (string pdfFile in Directory.GetFiles(pathToPdfFiles, "*.pdf"))
+            foreach (string pdfFile in Directory.GetFiles(pathToPdfFiles, "*.pdf", SearchOption.AllDirectories))
             {
                 string pdfContent = string.Empty;
 
@@ -62,6 +60,7 @@ public class HandleQDrant
                 {
                     OpenAIEmbedding embedding = embeddingClient.GenerateEmbedding(input: chunk);
                     ReadOnlyMemory<float> vector = embedding.ToFloats();
+                    if (vector.Length != (int)vectorSize) throw new InvalidOperationException("Unerwartete Embedding-Dimension.");
 
                     var points = new List<PointStruct>
                     {

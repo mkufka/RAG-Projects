@@ -1,6 +1,8 @@
-﻿using RetrievalAugmentedGeneration;
+using RetrievalAugmentedGeneration;
 using OpenAI.Chat;
 using OpenAI.Embeddings;
+using OpenAI;
+using System.ClientModel;
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
 using System.Text;
@@ -8,14 +10,15 @@ using QValue = Qdrant.Client.Grpc.Value;
 
 DotNetEnv.Env.NoClobber().TraversePath().Load(Path.Combine(AppContext.BaseDirectory, ".env"));
 
-string apiKey = GetRequiredSetting("OPENAI_API_KEY");
+string apiKey = args.Contains("--check") ? "configuration-check-only" : GetRequiredSetting("OPENROUTER_API_KEY");
+string baseUrl = Environment.GetEnvironmentVariable("OPENROUTER_BASE_URL") ?? "https://openrouter.ai/api/v1";
 string memoryCollectionName = Environment.GetEnvironmentVariable("RAG_COLLECTION_NAME") ?? "CollectionWithData";
 string pathToQdrant = Environment.GetEnvironmentVariable("QDRANT_HOST") ?? "localhost";
 int portToQdrant = int.Parse(Environment.GetEnvironmentVariable("QDRANT_GRPC_PORT") ?? "6334");
 if (portToQdrant is < 1 or > 65535)
     throw new InvalidOperationException("QDRANT_GRPC_PORT must be between 1 and 65535.");
-string textEmbeddingModel = Environment.GetEnvironmentVariable("EMBEDDING_MODEL") ?? "text-embedding-3-large";
-string chatModel = Environment.GetEnvironmentVariable("CHAT_MODEL") ?? "gpt-4o-mini";
+string textEmbeddingModel = Environment.GetEnvironmentVariable("EMBEDDING_MODEL") ?? "openai/text-embedding-3-large";
+string chatModel = Environment.GetEnvironmentVariable("CHAT_MODEL") ?? "openai/gpt-6-luna";
 
 /* ATTENTION:
 * text-embedding-3-large provides a vector with 3072 dimensions
@@ -28,7 +31,23 @@ if (!Directory.Exists(pathToPdfFiles))
     throw new DirectoryNotFoundException("RAG_PDF_DIR must point to an existing PDF directory.");
 
 // Entry: first try to load data (ignore if already exists), then start interactive RAG chat.
-await LoadIfNeededSafe();
+if (args.Contains("--check"))
+{
+    using var qc = new QdrantClient(pathToQdrant, portToQdrant);
+    await qc.ListCollectionsAsync();
+    var pdfs = Directory.GetFiles(pathToPdfFiles, "*.pdf", SearchOption.AllDirectories);
+    if (pdfs.Length == 0) throw new InvalidOperationException("Keine PDFs gefunden.");
+    foreach (var pdf in pdfs)
+    {
+        using var document = UglyToad.PdfPig.PdfDocument.Open(pdf);
+        int characters = document.GetPages().Sum(p => p.Text.Length);
+        if (characters == 0) throw new InvalidOperationException($"Kein PDF-Text: {pdf}");
+        Console.WriteLine($"PDF OK: {Path.GetFileName(pdf)}, {document.NumberOfPages} Seiten, {characters} Zeichen");
+    }
+    Console.WriteLine($"Konfiguration und Qdrant-gRPC OK. Provider: {baseUrl}; Modelle: {textEmbeddingModel}, {chatModel}");
+    return;
+}
+await new HandleQDrant().LoadDataToQdrant(memoryCollectionName, pathToPdfFiles, apiKey, textEmbeddingModel, pathToQdrant, portToQdrant, vectorSize, baseUrl);
 await StartRagChatAsync();
 
 // Try to (re)load PDFs into Qdrant, but don't crash if collection already exists.
@@ -40,29 +59,13 @@ static string GetRequiredSetting(string name)
     return value;
 }
 
-async Task LoadIfNeededSafe()
-{
-    try
-    {
-        HandleQDrant handleQDrant = new();
-        await handleQDrant.LoadDataToQdrant(memoryCollectionName, pathToPdfFiles, apiKey, textEmbeddingModel, pathToQdrant, portToQdrant, vectorSize);
-    }
-    catch (Exception ex)
-    {
-        // If collection already exists or Qdrant reports a minor recoverable error, continue.
-        if (!ex.Message.Contains("exist", StringComparison.OrdinalIgnoreCase))
-        {
-            Console.WriteLine($"Error: Could not load data: {ex.Message}");
-        }
-    }
-}
-
 async Task StartRagChatAsync()
 {
     // Clients
     var qdrant = new QdrantClient(pathToQdrant, portToQdrant);
-    EmbeddingClient embeddingClient = new(model: textEmbeddingModel, apiKey: apiKey);
-    ChatClient chatClient = new(model: chatModel, apiKey: apiKey);
+    var provider = new OpenAIClient(new ApiKeyCredential(apiKey), new OpenAIClientOptions { Endpoint = new Uri(baseUrl) });
+    EmbeddingClient embeddingClient = provider.GetEmbeddingClient(textEmbeddingModel);
+    ChatClient chatClient = provider.GetChatClient(chatModel);
 
     // Conversation memory (keeps Q&A, not the raw retrieved context to avoid prompt bloat)
     var history = new List<ChatMessage>
@@ -77,6 +80,7 @@ async Task StartRagChatAsync()
     {
         Console.Write("Frage > ");
         string? question = Console.ReadLine();
+        if (question is null) break;
         if (string.IsNullOrWhiteSpace(question))
             continue;
         if (string.Equals(question.Trim(), "exit", StringComparison.OrdinalIgnoreCase))
@@ -91,9 +95,10 @@ async Task StartRagChatAsync()
 
             // 2) Retrieve top-k relevant chunks from Qdrant with payload
             const int topK = 6;
-            var results = await qdrant.SearchAsync(
+            var results = await qdrant.QueryAsync(
                 collectionName: memoryCollectionName,
-                vector: queryVector,
+                query: queryVector,
+                payloadSelector: true,
                 limit: topK);
 
             // 3) Build concise context block
@@ -110,7 +115,10 @@ async Task StartRagChatAsync()
 
             ChatCompletionOptions options = new()
             {
-                Temperature = 0.7f,
+                // OpenAI SDK 2.3 marks this wire parameter as experimental.
+#pragma warning disable OPENAI001
+                ReasoningEffortLevel = new ChatReasoningEffortLevel("none"),
+#pragma warning restore OPENAI001
                 MaxOutputTokenCount = 500
             };
 

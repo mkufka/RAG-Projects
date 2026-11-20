@@ -5,6 +5,9 @@ from config import Settings
 
 def ensure_collection(client: QdrantClient, name: str, size: int) -> None:
     if client.collection_exists(name):
+        config = client.get_collection(name).config.params.vectors
+        if not isinstance(config, VectorParams) or config.size != size or config.distance != Distance.DOT:
+            raise ValueError("Collection-Dimension/Distanz passt nicht zum Embedding-Modell.")
         print(f"Collection '{name}' existiert bereits – nichts zu tun.")
         return
     # In .NET: Distance.Dot -> hier Distance.DOT

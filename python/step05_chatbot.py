@@ -174,8 +174,8 @@ def chat_once(client: OpenAI, s: Settings, context: str, user_query: str) -> str
         with client.chat.completions.stream(
             model=s.chat_model,
             messages=messages,
-            temperature=0.2,
-            max_tokens=s.max_answer_tokens,
+            reasoning_effort="none",
+            max_completion_tokens=s.max_answer_tokens,
         ) as stream:
             for event in stream:
                 if event.type == "content.delta":
@@ -195,8 +195,8 @@ def chat_once(client: OpenAI, s: Settings, context: str, user_query: str) -> str
     resp = client.chat.completions.create(
         model=s.chat_model,
         messages=messages,
-        temperature=0.2,
-        max_tokens=s.max_answer_tokens,
+        reasoning_effort="none",
+        max_completion_tokens=s.max_answer_tokens,
     )
     return resp.choices[0].message.content.strip()
 
@@ -205,7 +205,7 @@ def main():
     s = Settings()
 
     # OpenAI + Qdrant
-    oa = OpenAI(api_key=s.openai_api_key)
+    oa = OpenAI(api_key=s.require_api_key(), base_url=s.openrouter_base_url)
     qc = QdrantClient(host=s.qdrant_host, grpc_port=s.qdrant_grpc_port, prefer_grpc=True)
 
     print("RAG-Chat gestartet. Tippe deine Frage. Mit 'exit' beenden.\n")

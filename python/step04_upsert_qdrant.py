@@ -15,6 +15,7 @@ from config import Settings
 from step03_embeddings import embed_chunks
 # Und aus Schritt 2 die Chunks
 from step02_pdf_chunking import build_chunks_for_directory
+from step01_qdrant_setup import ensure_collection
 
 
 def batched(iterable: Iterable[Any], n: int) -> Iterable[list[Any]]:
@@ -33,7 +34,7 @@ def records_to_points(records):
     for r in records:
         points.append(
             PointStruct(
-                id=str(uuid.uuid4()),     # <— hier: UUID als String
+                id=str(uuid.uuid5(uuid.NAMESPACE_URL, r["payload"]["source_path"] + "#" + r["id"])),
                 vector=r["vector"],
                 payload=r["payload"],
             )
@@ -60,6 +61,9 @@ def upsert_records(client: QdrantClient, collection: str, records: List[Dict[str
 
 def main():
     s = Settings()
+    s.require_api_key()
+    client = QdrantClient(host=s.qdrant_host, grpc_port=s.qdrant_grpc_port, prefer_grpc=True)
+    ensure_collection(client, s.collection, s.vector_size)
     # 1) Chunks (Schritt 2) laden/erzeugen
     chunks = build_chunks_for_directory(s)
     if not chunks:
@@ -69,13 +73,6 @@ def main():
     # 2) Embeddings (Schritt 3) erzeugen
     print(f"Erzeuge Embeddings mit Modell: {s.embedding_model}")
     records = embed_chunks(chunks, model=s.embedding_model, batch_size=96)
-
-    # 3) Qdrant-Client (gRPC) verbinden
-    client = QdrantClient(host=s.qdrant_host, grpc_port=s.qdrant_grpc_port, prefer_grpc=True)
-
-    # Optional: prüfen, ob Collection existiert (sollte seit Schritt 1 der Fall sein)
-    if not client.collection_exists(s.collection):
-        raise SystemExit(f"Collection '{s.collection}' nicht gefunden. Bitte Schritt 1 ausführen.")
 
     # 4) Upsert in Batches
     written = upsert_records(client, s.collection, records, batch_size=256)

@@ -5,6 +5,7 @@ python-dotenv>=1.0,<2
 pypdf>=4,<5
 tiktoken>=0.7,<1
 numpy>=1.26,<3
+truststore>=0.10,<1
 
 # Optional: Dev-Tools
 # ruff>=0.4,<1
